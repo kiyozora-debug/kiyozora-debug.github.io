@@ -37,7 +37,7 @@
           var(--primary-blue)
         );
         color: white;
-        padding: 30px 20px 40px;
+        padding: 40px 20px 60px;
         text-align: center;
         border-radius: 0 0 40px 40px;
         box-shadow: 0 10px 25px rgba(37, 99, 235, 0.15);
@@ -80,7 +80,7 @@
         flex: 1;
         padding: 0 20px;
         max-width: 600px;
-        margin: -10px auto 40px;
+        margin: -30px auto 40px;
       }
 
       /* CUSTOM INFO SECTION (Slot Kosong H2 & P) */
@@ -89,7 +89,6 @@
         padding: 20px;
         border-radius: 20px;
         margin-bottom: 20px;
-        margin-top: 10px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         text-align: center;
       }
@@ -108,7 +107,6 @@
       }
 
       /* STATS */
-
       .stats {
         display: flex;
         gap: 15px;
@@ -239,27 +237,6 @@
         background: #f1f5f9;
         border-top: 1px solid #e2e8f0;
       }
-      .calendar-day {
-        background: white;
-        border-radius: 12px;
-        padding: 10px;
-        min-height: 120px;
-        font-size: 12px;
-        border: 1px solid #e2e8f0;
-      }
-
-      .calendar-day-header {
-        font-weight: 700;
-        margin-bottom: 5px;
-      }
-
-      .draggable {
-        background: #eff6ff;
-        padding: 6px;
-        border-radius: 8px;
-        margin-bottom: 5px;
-        cursor: grab;
-      }
     </style>
   </head>
 
@@ -280,21 +257,7 @@
         <p>Olohiyo butuhiyo, lantingiyo polangio.</p>
         <p><i>Siapa rajin dia kenyang, siapa malas dia kelapara.</i></p>
       </div>
-      <!-- SEARCH -->
 
-      <input
-        type="text"
-        id="searchInput"
-        placeholder="Cari konten..."
-        oninput="render()"
-        style="
-          width: 100%;
-          padding: 12px;
-          border-radius: 12px;
-          border: 1px solid #e2e8f0;
-          margin-bottom: 15px;
-        "
-      />
       <div class="stats">
         <div class="stat">
           <span id="done">0</span>
@@ -306,40 +269,11 @@
         </div>
       </div>
 
-      <!-- PROGRESS BAR -->
-      <div style="margin-bottom: 20px">
-        <div style="height: 8px; background: #e2e8f0; border-radius: 10px">
-          <div
-            id="progressBar"
-            style="
-              height: 8px;
-              background: #2563eb;
-              width: 0%;
-              border-radius: 10px;
-            "
-          ></div>
-        </div>
-      </div>
-
       <div class="filter-wrapper">
         <label>PILIH CLIENT</label>
         <select id="clientFilter" onchange="render()"></select>
       </div>
-      <div
-        id="loading"
-        style="display: none; text-align: center; margin-bottom: 15px"
-      >
-        Sabar aa, Masi Loading.....
-      </div>
-      <div
-        id="calendar"
-        style="
-          display: grid;
-          grid-template-columns: repeat(7, 1fr);
-          gap: 10px;
-          margin-bottom: 20px;
-        "
-      ></div>
+
       <div id="list"></div>
     </div>
 
@@ -357,69 +291,6 @@
         setInterval(loadData, 10000);
       });
 
-      function renderCalendar() {
-        const cal = document.getElementById("calendar");
-        cal.innerHTML = "";
-
-        let today = new Date();
-        let start = new Date(today.setDate(today.getDate() - today.getDay()));
-
-        for (let i = 0; i < 7; i++) {
-          let d = new Date(start);
-          d.setDate(start.getDate() + i);
-
-          let dayDiv = document.createElement("div");
-          dayDiv.className = "calendar-day";
-          dayDiv.dataset.date = d.toISOString();
-
-          dayDiv.innerHTML = `
-      <div class="calendar-day-header">
-        ${d.toLocaleDateString("id-ID", { weekday: "short", day: "numeric" })}
-      </div>
-    `;
-
-          // DROP AREA
-          dayDiv.ondragover = (e) => e.preventDefault();
-
-          dayDiv.ondrop = (e) => {
-            let id = e.dataTransfer.getData("id");
-            updateDate(id, d);
-          };
-
-          cal.appendChild(dayDiv);
-        }
-
-        // MASUKKAN DATA KE HARI
-        contents.forEach((item) => {
-          let itemDate = new Date(item.date).toDateString();
-
-          document.querySelectorAll(".calendar-day").forEach((day) => {
-            if (new Date(day.dataset.date).toDateString() === itemDate) {
-              let el = document.createElement("div");
-              el.className = "draggable";
-              el.draggable = true;
-              el.innerText = item.theme;
-
-              el.ondragstart = (e) => {
-                e.dataTransfer.setData("id", item.id);
-              };
-
-              day.appendChild(el);
-            }
-          });
-        });
-      }
-
-      function updateDate(id, newDate) {
-        fetch(SCRIPT_URL, {
-          method: "POST",
-          body: JSON.stringify({
-            action: "updateDate",
-            id: id,
-            date: newDate.toISOString(),
-          }),
-        });
-      }
       function setGreeting() {
         let h = new Date().getHours();
         let t = "MALAM";
@@ -439,27 +310,17 @@
       }
 
       async function loadData() {
-        document.getElementById("loading").style.display = "block";
         try {
           const res = await fetch(SCRIPT_URL);
           const text = await res.text();
-
-          if (text === lastData) {
-            document.getElementById("loading").style.display = "none";
-            return;
-          }
-
+          if (text === lastData) return;
           lastData = text;
           contents = JSON.parse(text);
-
           renderClientFilter();
           render();
         } catch (e) {
-          document.getElementById("list").innerHTML =
-            "<p style='text-align:center;color:red;'>Gagal load data</p>";
+          console.log("Gagal memuat data.");
         }
-
-        document.getElementById("loading").style.display = "none";
       }
 
       function renderClientFilter() {
@@ -478,22 +339,13 @@
         let client = document.getElementById("clientFilter").value;
         if (!client) return;
 
-        let keyword = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
-
-        let data = contents.filter(
-          (c) => c.client === client && c.theme.toLowerCase().includes(keyword),
-        );
+        let data = contents.filter((c) => c.client === client);
         document.getElementById("done").innerText = data.filter(
           (c) => c.status === "Done",
         ).length;
         document.getElementById("pending").innerText = data.filter(
           (c) => c.status !== "Done",
         ).length;
-        let doneCount = data.filter((c) => c.status === "Done").length;
-        let percent = (doneCount / data.length) * 100 || 0;
-        document.getElementById("progressBar").style.width = percent + "%";
 
         list.innerHTML = "";
         data.forEach((item) => {
@@ -516,7 +368,6 @@
           `;
           list.appendChild(div);
         });
-        renderCalendar();
       }
 
       function formatDate(d) {
